@@ -25,55 +25,85 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
+const getBookListProm = new Promise((resolve,reject) => {	  
+    resolve(JSON.stringify(books,null,4))
+});
+
 public_users.get('/',function (req, res) {
-  res.send(JSON.stringify(books,null,4));
+    getBookListProm.then((response) => {
+        res.send(response);
+    })
 });
 
 // Get book details based on ISBN
+const getBookISBN = (isbn) => {
+    return new Promise((resolve,reject) => {
+        let totalBooks = Object.keys(books).length;
+        match = false;
+            if (isbn > 0 && isbn <= totalBooks){
+                match = true;
+                resolve(books[isbn])
+                
+            }
+            if (match == false){
+                resolve("Invalid ISBN Number")
+            }
+        });
+};
+
 public_users.get('/isbn/:isbn',function (req, res) {
-    const isbn = req.params.isbn;
-    let totalBooks = Object.keys(books).length;
-    if (isbn > 0 && isbn <= totalBooks){
-        res.send(books[isbn]);
-    }
-    else{
-        res.send("Invalid ISNB Number");     
-    }
+    getBookISBN(req.params.isbn).then((resp) =>{
+        console.log(resp);
+        res.send(resp);
+    })
  });
-  
+
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-
-    const author = req.params.author;
-    let filtered_books = {};
-    numBooks = 0;
-    let totalBooks = Object.keys(books).length
-
-    for (bookNum = 1; bookNum <= totalBooks; bookNum++){   
-        if (books[bookNum].author === author){
-            filtered_books[numBooks] = books[bookNum];
-            numBooks++;
+const getBookfromAuthor = (author) => {
+    return new Promise((resolve,reject) => {
+        let filtered_books = {};
+        numBooks = 0;
+        let totalBooks = Object.keys(books).length
+        for (bookNum = 1; bookNum <= totalBooks; bookNum++){   
+            if (books[bookNum].author === author){
+                filtered_books[numBooks] = books[bookNum];
+                numBooks++;
+            }
         }
-    }
-  res.send(filtered_books);
+        resolve(filtered_books)
+    });
+};
+
+public_users.get('/author/:author',function (req, res) {
+    getBookfromAuthor(req.params.author).then((resp) =>{
+        console.log(resp);
+        res.send(resp);
+    })
 
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-
-    const title = req.params.title;
-    let filtered_books = {};
-    numBooks = 0;
-    let totalBooks = Object.keys(books).length;
-
-    for (bookNum = 1; bookNum <= totalBooks; bookNum++){   
-        if (books[bookNum].title === title){
-            filtered_books[numBooks] = books[bookNum];
-            numBooks++;
+const getBookfromTitle = (title) => {
+    return new Promise((resolve,reject) => {
+        let filtered_books = {};
+        numBooks = 0;
+        let totalBooks = Object.keys(books).length;
+    
+        for (bookNum = 1; bookNum <= totalBooks; bookNum++){   
+            if (books[bookNum].title === title){
+                filtered_books[numBooks] = books[bookNum];
+                numBooks++;
+            }
         }
-    }
-  res.send(filtered_books);   
+        resolve(filtered_books)
+    });
+};
+
+public_users.get('/title/:title',function (req, res) {
+    getBookfromTitle(req.params.title).then((resp) =>{
+        console.log(resp);
+        res.send(resp);
+    })  
 });
 
 //  Get book review
@@ -85,7 +115,7 @@ public_users.get('/review/:isbn',function (req, res) {
         res.send(books[isbn].reviews);
     }
     else{
-         res.send("Invalid ISNB Number");       
+         res.send("Invalid ISBN Number");       
     }
 
 
