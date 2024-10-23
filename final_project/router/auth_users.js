@@ -64,42 +64,70 @@ regd_users.post("/login", (req,res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
   
     const isbn = req.params.isbn;
-    const review = req.params.review;
+    const review = req.body.review;
     const user = req.session.authorization.username;
 
     console.log(isbn);
     console.log(review);
-    console.log(user)
+    console.log(user);
     
     let totalBooks = Object.keys(books).length;
     let totalReviews = 0;
     let match = false;
     if (isbn > 0 && isbn <= totalBooks){
         // Book number is within range
-        // Bheck if there is an existing review from this user
+        // Check if there is an existing review from this user
         totalReviews = Object.keys(books[isbn].reviews).length;
         for (let reviewInd = 0; reviewInd < totalReviews;  reviewInd++){
             if(books[isbn].reviews[reviewInd].user === user){
                 // there is an existing review fron that user
                 books[isbn].reviews[reviewInd].review = review;
-                res.send(`Successfully updated the review for book ${books[isbn].title} from user ${username}`);
+                res.send(`Successfully updated the review for book ${books[isbn].title} from user ${user}`);
                 match = true;
             }
         }
         if(match == false){
             // this is the first time this user submits a revier for this book
-            books[isbn].reviews[reviewInd].user = username;
-            books[isbn].reviews[reviewInd].review = review;
-            res.send(`Successfully added a review for book ${books[isbn].title} from user ${username}`);                
+            books[isbn].reviews[totalReviews] ={
+                user: user,
+                review: review
+            }
+            res.send(`Successfully added a review for book ${books[isbn].title} from user ${user}`);                
         }
     }
     else{
          res.send("Invalid ISNB Number");       
     }  
-  
-    //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
 });
+
+// Delete a book review
+regd_users.put("/auth/delete-review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+    const user = req.session.authorization.username;
+
+    console.log(isbn);
+    console.log(user);
+    
+    let totalBooks = Object.keys(books).length;
+    let totalReviews = 0;
+    if (isbn > 0 && isbn <= totalBooks){
+        // Book number is within range
+        // Check if there is an existing review from this user
+        totalReviews = Object.keys(books[isbn].reviews).length;
+        for (let reviewInd = 0; reviewInd < totalReviews;  reviewInd++){
+            if(books[isbn].reviews[reviewInd].user === user){
+                // there is an existing review fron that user
+                console.log("Review Found!");
+                console.log(books[isbn].reviews);
+                delete books[isbn].reviews[reviewInd];
+                res.send(`Successfully deleted the review for book ${books[isbn].title} from user ${user}`);
+            }
+        }
+    }
+});
+
+
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
